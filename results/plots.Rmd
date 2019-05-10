@@ -1,0 +1,577 @@
+---
+title: "Long read assembler comparison"
+date: "2019-05-08"
+author: "Ryan Wick"
+output:
+  html_document:
+    pandoc_args: ["+RTS", "-K64m", "-RTS", "--self-contained",]
+    df_print: paged
+    keep_md: false
+    toc: true
+    toc_float: true
+---
+
+
+## Load libraries
+
+```{r}
+library(tidyverse)
+library(scales)
+library(tools)
+library(gridExtra)
+library(ggforce)
+library(knitr)
+library(plyr)
+library(dplyr)
+opts_chunk$set(dpi=300, fig.path='./plots/', echo=T, dev=c('png','pdf'), warning=FALSE, message=FALSE)
+```
+
+
+
+
+
+
+
+
+## Load in the data
+
+Problem set data:
+```{r}
+adapter_length_results <- read_tsv("adapter_length_results") %>% filter(contigs > 0)
+chimera_results <- read_tsv("chimera_results") %>% filter(contigs > 0)
+glitch_results <- read_tsv("glitch_results") %>% filter(contigs > 0)
+read_depth_results <- read_tsv("read_depth_results") %>% filter(contigs > 0)
+read_identity_results <- read_tsv("read_identity_results") %>% filter(contigs > 0)
+read_length_results <- read_tsv("read_length_results") %>% filter(contigs > 0)
+random_junk_results <- read_tsv("random_junk_results") %>% filter(contigs > 0)
+glitch_levels <- read_tsv("glitch_levels")
+```
+
+Simulated chromosome data:
+```{r}
+sim_chromosome_results <- read_tsv("good_set_results") %>% filter(contiguity > 0.0)  # drop any that were total failures
+```
+
+Real chromosome data:
+```{r}
+real_chromosome_results <- read_tsv("real_set_chromosome_results") %>% filter(contiguity > 0.0) %>% filter(assembler != "flye_v2.4.2_plasmids") %>% filter(assembler != "flye_v2.4.2_meta") %>% filter(assembler != "flye_v2.4.2_plasmids_meta")
+real_chromosome_results$platform <- factor(real_chromosome_results$platform, levels = c("pacbio", "nanopore"))
+real_chromosome_results$platform_int <- (real_chromosome_results$platform == "nanopore") + 16L
+```
+
+Simulated plasmid data:
+```{r}
+sim_plasmid_results <- read_tsv("plasmid_results") %>% filter(name != 'chromosome') %>% filter(depth >= 1.0) %>% filter(depth <= 1000.0)
+sim_plasmid_results_chromosome <- read_tsv("plasmid_results") %>% filter(name == 'chromosome')
+```
+
+Real plasmid data:
+```{r}
+real_plasmid_results <- read_tsv("real_set_all_replicon_results") %>% filter(name != "1") %>% filter(depth > 5.0)
+real_plasmid_results_chromosome <- read_tsv("real_set_all_replicon_results") %>% filter(name == "1")
+```
+
+Combine plasmid data:
+```{r}
+sim_plasmid_results$type <- "simulated"
+real_plasmid_results$type <- "real"
+plasmid_results <- rbind(sim_plasmid_results, real_plasmid_results)
+plasmid_results$shape <- paste(plasmid_results$type, plasmid_results$contig_match, sep = "_")
+plasmid_results$shape <- factor(plasmid_results$shape, levels = c("simulated_FALSE", "simulated_TRUE", "real_FALSE", "real_TRUE"))
+```
+
+
+
+
+
+
+
+## Problem set plots
+
+Functions for axes transformations and data prep:
+```{r}
+contigs_to_str <- function(x) {
+  if (x == 1) {
+    return("1")
+  } else {
+    return("2+")
+  }
+}
+
+# These describe the y-axis transformation. I used a sigmoid function to focus on the range near 100%.
+y_trans <- function(x) {
+  a <- exp((x-1)/0.15)
+  return(a/(a+1))
+}
+y_trans_inv <- function(x) {
+  return(0.15 * log(-x/(x-1)) + 1)
+}
+trans_sigmoid <- trans_new(name = "sigmoid", transform = y_trans, inverse = y_trans_inv)
+
+prep_results_one_assembler <- function(results, assembler_name) {
+  if (is.null(assembler_name)) { 
+    assembler_results <- results
+  } else {
+    assembler_results <- results[results$assembler == assembler_name,]
+  }
+  assembler_results$contigs_str <- sapply(assembler_results$contigs, contigs_to_str)
+  return(assembler_results)
+}
+```
+
+Functions for making the plots:
+```{r}
+plot_adapter_length_one_assembler <- function(results, assembler_name, colour) {
+  assembler_results <- prep_results_one_assembler(results, assembler_name)
+  p <- ggplot(data=assembler_results) +
+    geom_point(aes(x=start_adapter_length, y=contiguity, shape=contigs_str), colour=colour, alpha=0.75) +
+    scale_shape_manual("Contigs", values = c(16, 1)) +
+    coord_trans(y = trans_sigmoid, limy=c(0.0, 1.05)) +
+    scale_y_continuous(expand=c(0.02, 0), limits=c(0.0, 1.05),
+                       breaks = seq(0.7, 1.0, 0.1),
+                       minor_breaks = seq(0, 0.6, 0.1),
+                       labels = scales::percent_format(accuracy = 1)) +
+    scale_x_continuous(expand=c(0, 0), limits=c(0, 1000)) +
+    theme_bw() + theme(panel.grid.minor = element_line(size = 0.5), panel.grid.major = element_line(size = 0.5)) +
+    labs(title = NULL, x = "Adapter length", y = "Contiguity")
+  return(p)
+}
+
+plot_chimera_rate_one_assembler <- function(results, assembler_name, colour) {
+  assembler_results <- prep_results_one_assembler(results, assembler_name)
+  p <- ggplot(data=assembler_results) +
+    geom_point(aes(x=chimera_rate, y=contiguity, shape=contigs_str), colour=colour, alpha=0.75) +
+    scale_shape_manual("Contigs", values = c(16, 1)) +
+    coord_trans(y = trans_sigmoid, limy=c(0.0, 1.05)) +
+    scale_y_continuous(expand=c(0.02, 0), limits=c(0.0, 1.05),
+                       breaks = seq(0.7, 1.0, 0.1),
+                       minor_breaks = seq(0, 0.6, 0.1),
+                       labels = scales::percent_format(accuracy = 1)) +
+    scale_x_continuous(expand=c(0, 0), limits=c(0.0, 0.25), labels = scales::percent_format(accuracy = 1)) +
+    theme_bw() + theme(panel.grid.minor = element_line(size = 0.5), panel.grid.major = element_line(size = 0.5)) +
+    labs(title = NULL, x = "Chimera rate", y = "Contiguity")
+  return(p)
+}
+
+plot_glitch_level_one_assembler <- function(results, assembler_name, colour) {
+  assembler_results <- prep_results_one_assembler(results, assembler_name)
+  p <- ggplot(data=assembler_results) +
+    geom_point(aes(x=glitch_size, y=contiguity, shape=contigs_str), colour=colour, alpha=0.75) +
+    scale_shape_manual("Contigs", values = c(16, 1)) +
+    coord_trans(y = trans_sigmoid, limy=c(0.0, 1.05)) +
+    scale_y_continuous(expand=c(0.02, 0), limits=c(0.0, 1.05),
+                       breaks = seq(0.7, 1.0, 0.1),
+                       minor_breaks = seq(0, 0.6, 0.1),
+                       labels = scales::percent_format(accuracy = 1)) +
+    scale_x_continuous(expand=c(0, 0), limits=c(0, 100)) +
+    theme_bw() + theme(panel.grid.minor = element_line(size = 0.5), panel.grid.major = element_line(size = 0.5)) +
+    labs(title = NULL, x = "Glitch level", y = "Contiguity")
+  return(p)
+}
+
+plot_read_depth_one_assembler <- function(results, assembler_name, colour) {
+  assembler_results <- prep_results_one_assembler(results, assembler_name)
+  p <- ggplot(data=assembler_results) +
+    geom_point(aes(x=depth, y=contiguity, shape=contigs_str), colour=colour, alpha=0.75) +
+    scale_shape_manual("Contigs", values = c(16, 1)) +
+    coord_trans(y = trans_sigmoid, limy=c(0.0, 1.05)) +
+    scale_y_continuous(expand=c(0.02, 0), limits=c(0.0, 1.05),
+                       breaks = seq(0.7, 1.0, 0.1),
+                       minor_breaks = seq(0, 0.6, 0.1),
+                       labels = scales::percent_format(accuracy = 1)) +
+    scale_x_continuous(expand=c(0, 0), limits=c(0, 100)) +
+    theme_bw() + theme(panel.grid.minor = element_line(size = 0.5), panel.grid.major = element_line(size = 0.5)) +
+    labs(title = NULL, x = "Read depth", y = "Contiguity")
+  return(p)
+}
+
+plot_read_identity_one_assembler <- function(results, assembler_name, colour) {
+  assembler_results <- prep_results_one_assembler(results, assembler_name)
+  p <- ggplot(data=assembler_results) +
+    geom_point(aes(x=read_identity_mean, y=contiguity, shape=contigs_str), colour=colour, alpha=0.75) +
+    scale_shape_manual("Contigs", values = c(16, 1)) +
+    coord_trans(y = trans_sigmoid, limy=c(0.0, 1.05)) +
+    scale_y_continuous(expand=c(0.02, 0), limits=c(0.0, 1.05),
+                       breaks = seq(0.7, 1.0, 0.1),
+                       minor_breaks = seq(0, 0.6, 0.1),
+                       labels = scales::percent_format(accuracy = 1)) +
+    scale_x_continuous(expand=c(0, 0), limits=c(0.7, 1.0), labels = scales::percent_format(accuracy = 1)) +
+    theme_bw() + theme(panel.grid.minor = element_line(size = 0.5), panel.grid.major = element_line(size = 0.5)) +
+    labs(title = NULL, x = "Read identity", y = "Contiguity")
+  return(p)
+}
+
+plot_read_length_one_assembler <- function(results, assembler_name, colour) {
+  assembler_results <- prep_results_one_assembler(results, assembler_name)
+  p <- ggplot(data=assembler_results) +
+    geom_point(aes(x=fragment_length_mean, y=contiguity, shape=contigs_str), colour=colour, alpha=0.75) +
+    scale_shape_manual("Contigs", values = c(16, 1)) +
+    coord_trans(y = trans_sigmoid, limy=c(0.0, 1.05)) +
+    scale_y_continuous(expand=c(0.02, 0), limits=c(0.0, 1.05),
+                       breaks = seq(0.7, 1.0, 0.1),
+                       minor_breaks = seq(0, 0.6, 0.1),
+                       labels = scales::percent_format(accuracy = 1)) +
+    scale_x_continuous(expand=c(0, 0), limits=c(0, 50000)) +
+    theme_bw() + theme(panel.grid.minor = element_line(size = 0.5), panel.grid.major = element_line(size = 0.5)) +
+    labs(title = NULL, x = "Read length", y = "Contiguity")
+  return(p)
+}
+
+plot_random_junk_one_assembler <- function(results, assembler_name, colour) {
+  assembler_results <- prep_results_one_assembler(results, assembler_name)
+  p <- ggplot(data=assembler_results) +
+    geom_point(aes(x=junk_rate, y=contiguity, shape=contigs_str), colour=colour, alpha=0.75) +
+    scale_shape_manual("Contigs", values = c(16, 1)) +
+    coord_trans(y = trans_sigmoid, limy=c(0.0, 1.05)) +
+    scale_y_continuous(expand=c(0.02, 0), limits=c(0.0, 1.05),
+                       breaks = seq(0.7, 1.0, 0.1),
+                       minor_breaks = seq(0, 0.6, 0.1),
+                       labels = scales::percent_format(accuracy = 1)) +
+    scale_x_continuous(expand=c(0, 0), limits=c(0.0, 0.25), labels = scales::percent_format(accuracy = 1)) +
+    theme_bw() + theme(panel.grid.minor = element_line(size = 0.5), panel.grid.major = element_line(size = 0.5)) +
+    labs(title = NULL, x = "Random/junk rate", y = "Contiguity")
+  return(p)
+}
+```
+
+
+```{r adapter_length, fig.width=4.5, fig.height=7}
+p1 <- plot_adapter_length_one_assembler(adapter_length_results, "canu_v1.8", "#AB3B33")
+p2 <- plot_adapter_length_one_assembler(adapter_length_results, "flye_v2.4.2", "#998B00")
+p3 <- plot_adapter_length_one_assembler(adapter_length_results, "ra_07364a1", "#009E43")
+p4 <- plot_adapter_length_one_assembler(adapter_length_results, "unicycler_v0.4.7", "#006DC4")
+p5 <- plot_adapter_length_one_assembler(adapter_length_results, "wtdbg2_v2.4", "#AC50B5")
+grid.arrange(p1, p2, p3, p4, p5, ncol = 1)
+```
+
+```{r chimeras, fig.width=4.5, fig.height=7}
+p1 <- plot_chimera_rate_one_assembler(chimera_results, "canu_v1.8", "#AB3B33")
+p2 <- plot_chimera_rate_one_assembler(chimera_results, "flye_v2.4.2", "#998B00")
+p3 <- plot_chimera_rate_one_assembler(chimera_results, "ra_07364a1", "#009E43")
+p4 <- plot_chimera_rate_one_assembler(chimera_results, "unicycler_v0.4.7", "#006DC4")
+p5 <- plot_chimera_rate_one_assembler(chimera_results, "wtdbg2_v2.4", "#AC50B5")
+grid.arrange(p1, p2, p3, p4, p5, ncol = 1)
+```
+
+```{r glitches, fig.width=4.5, fig.height=7}
+p1 <- plot_glitch_level_one_assembler(glitch_results, "canu_v1.8", "#AB3B33")
+p2 <- plot_glitch_level_one_assembler(glitch_results, "flye_v2.4.2", "#998B00")
+p3 <- plot_glitch_level_one_assembler(glitch_results, "ra_07364a1", "#009E43")
+p4 <- plot_glitch_level_one_assembler(glitch_results, "unicycler_v0.4.7", "#006DC4")
+p5 <- plot_glitch_level_one_assembler(glitch_results, "wtdbg2_v2.4", "#AC50B5")
+grid.arrange(p1, p2, p3, p4, p5, ncol = 1)
+```
+
+```{r read_depth, fig.width=4.5, fig.height=7}
+p1 <- plot_read_depth_one_assembler(read_depth_results, "canu_v1.8", "#AB3B33")
+p2 <- plot_read_depth_one_assembler(read_depth_results, "flye_v2.4.2", "#998B00")
+p3 <- plot_read_depth_one_assembler(read_depth_results, "ra_07364a1", "#009E43")
+p4 <- plot_read_depth_one_assembler(read_depth_results, "unicycler_v0.4.7", "#006DC4")
+p5 <- plot_read_depth_one_assembler(read_depth_results, "wtdbg2_v2.4", "#AC50B5")
+grid.arrange(p1, p2, p3, p4, p5, ncol = 1)
+```
+
+```{r read_identity, fig.width=4.5, fig.height=7}
+p1 <- plot_read_identity_one_assembler(read_identity_results, "canu_v1.8", "#AB3B33")
+p2 <- plot_read_identity_one_assembler(read_identity_results, "flye_v2.4.2", "#998B00")
+p3 <- plot_read_identity_one_assembler(read_identity_results, "ra_07364a1", "#009E43")
+p4 <- plot_read_identity_one_assembler(read_identity_results, "unicycler_v0.4.7", "#006DC4")
+p5 <- plot_read_identity_one_assembler(read_identity_results, "wtdbg2_v2.4", "#AC50B5")
+grid.arrange(p1, p2, p3, p4, p5, ncol = 1)
+```
+
+```{r read_length, fig.width=4.5, fig.height=7}
+p1 <- plot_read_length_one_assembler(read_length_results, "canu_v1.8", "#AB3B33")
+p2 <- plot_read_length_one_assembler(read_length_results, "flye_v2.4.2", "#998B00")
+p3 <- plot_read_length_one_assembler(read_length_results, "ra_07364a1", "#009E43")
+p4 <- plot_read_length_one_assembler(read_length_results, "unicycler_v0.4.7", "#006DC4")
+p5 <- plot_read_length_one_assembler(read_length_results, "wtdbg2_v2.4", "#AC50B5")
+grid.arrange(p1, p2, p3, p4, p5, ncol = 1)
+```
+
+```{r random_junk, fig.width=4.5, fig.height=7}
+p1 <- plot_random_junk_one_assembler(random_junk_results, "canu_v1.8", "#AB3B33")
+p2 <- plot_random_junk_one_assembler(random_junk_results, "flye_v2.4.2", "#998B00")
+p3 <- plot_random_junk_one_assembler(random_junk_results, "ra_07364a1", "#009E43")
+p4 <- plot_random_junk_one_assembler(random_junk_results, "unicycler_v0.4.7", "#006DC4")
+p5 <- plot_random_junk_one_assembler(random_junk_results, "wtdbg2_v2.4", "#AC50B5")
+grid.arrange(p1, p2, p3, p4, p5, ncol = 1)
+```
+
+
+
+I also make this little reference plot for the glitch levels:
+
+```{r glitch_levels, fig.width=6, fig.height=2.5}
+p1 <- ggplot(data=glitch_levels) +
+  geom_line(aes(x=level, y=distance), colour="#619cff", size=1) +
+  scale_y_log10(labels = comma, breaks = c(100, 1000, 10000, 100000), minor_breaks = NULL) +
+  scale_x_continuous(minor_breaks = NULL) +
+  theme_bw() +
+  labs(x = "Glitch level", y = "Glitch rate")
+
+p2 <- ggplot(data=glitch_levels) +
+  geom_line(aes(x=level, y=size), colour="#f8766d", size=1) +
+  scale_y_continuous(minor_breaks = NULL) +
+  scale_x_continuous(minor_breaks = NULL) +
+  theme_bw() +
+  labs(x = "Glitch level", y = "Glitch size/skip")
+
+p1 <- ggplotGrob(p1)
+p2 <- ggplotGrob(p2)
+maxWidth = grid::unit.pmax(p1$widths[2:5], p2$widths[2:5])
+p1$widths[2:5] <- as.list(maxWidth)
+p2$widths[2:5] <- as.list(maxWidth)
+grid.arrange(p1, p2, ncol = 2)
+```
+
+
+
+
+
+
+
+
+## Contiguity plots
+
+Functions for axes transformations and data prep:
+```{r}
+contigs_to_str <- function(x) {
+  if (x == 1) {
+    return("1")
+  } else {
+    return("2+")
+  }
+}
+
+# These describe the contiguity y-axis transformation. I used a sigmoid function to focus on the range near 100%.
+y_trans <- function(x) {
+  a <- exp((x-1)/0.1)
+  return(a/(a+1))
+}
+y_trans_inv <- function(x) {
+  return(0.1 * log(-x/(x-1)) + 1)
+}
+trans_sigmoid <- trans_new(name = "sigmoid", transform = y_trans, inverse = y_trans_inv)
+
+# These describe the identity y-axis transformation.
+id_y_trans <- function(x) {
+  return(-10.0 * log10(1-x))
+}
+id_y_trans_inv <- function(x) {
+  return(1.0 - (10.0 ** (x/-10.0)))
+}
+trans_phred <- trans_new(name = "phred", transform = id_y_trans, inverse = id_y_trans_inv)
+```
+
+```{r sim_contiguity}
+sim_chromosome_results$contiguity_trans <- y_trans(sim_chromosome_results$contiguity)
+p1 <- ggplot(data=sim_chromosome_results) +
+  geom_sina(aes(x=assembler, y=contiguity_trans, colour=assembler), scale="area", maxwidth=0.85, bw=0.02, size=1, alpha=0.75, stroke=0) +
+  scale_colour_manual(values = c("canu_v1.8" = "#AB3B33", "flye_v2.4.2" = "#998B00", "ra_07364a1" = "#009E43", "unicycler_v0.4.7" = "#006DC4", "wtdbg2_v2.4" = "#AC50B5"), guide=FALSE) +
+  theme_bw() + theme(panel.grid.minor = element_line(size = 0.5), panel.grid.major = element_line(size = 0.5)) +
+  scale_y_continuous(expand=c(0.01, 0.0),
+                     breaks = y_trans(c(0.0, 0.7, 0.8, 0.9, 1.0)),
+                     labels = c("0%", "70%", "80%", "90%", "100%"),
+                     minor_breaks = y_trans(seq(0.1, 0.6, 0.1))) +
+  scale_x_discrete(labels = gsub("_", " ", c("Canu\nv1.8", "Flye\nv2.4.2", "Ra\n07364a1", "Unicycler\nv0.4.7", "Wtdbg2\nv2.4"))) +
+  coord_cartesian(ylim=c(0, 0.6)) +
+  labs(title="Simulated read sets", y="Contiguity", x=NULL)
+```
+
+```{r sim_contiguity_zoom}
+p2 <- ggplot(data=sim_chromosome_results) +
+  geom_sina(aes(x=assembler, y=contiguity, colour=assembler), scale="area", maxwidth=0.85, bw=0.000005, size=1, alpha=0.75, stroke=0) +
+  scale_colour_manual(values = c("canu_v1.8" = "#AB3B33", "flye_v2.4.2" = "#998B00", "ra_07364a1" = "#009E43", "unicycler_v0.4.7" = "#006DC4", "wtdbg2_v2.4" = "#AC50B5"), guide=FALSE) +
+  theme_bw() + theme(panel.grid.minor = element_line(size = 0.5), panel.grid.major = element_line(size = 0.5)) +
+  scale_y_continuous(labels = scales::percent_format(accuracy=0.001), limits = c(0.9999, 1.0001)) +
+  scale_x_discrete(labels = gsub("_", " ", c("Canu\nv1.8", "Flye\nv2.4.2", "Ra\n07364a1", "Unicycler\nv0.4.7", "Wtdbg2\nv2.4"))) +
+  coord_cartesian(ylim = c(0.99992, 1.00008)) +
+  labs(title=" ", y=NULL, x=NULL)
+```
+
+```{r real_contiguity}
+real_chromosome_results$contiguity_trans <- y_trans(real_chromosome_results$contiguity)
+p3 <- ggplot(data=real_chromosome_results) +
+  geom_sina(aes(x=assembler, y=contiguity_trans, colour=assembler, shape=platform_int), scale="area", maxwidth=0.85, bw=0.02, size=1.75, alpha=0.75, stroke=0) +
+  scale_shape_identity("Platform", labels=c("PacBio RSII", "ONT MinION")) +
+  scale_colour_manual(values = c("canu_v1.8" = "#AB3B33", "flye_v2.4.2" = "#998B00", "ra_07364a1" = "#009E43", "unicycler_v0.4.7" = "#006DC4", "wtdbg2_v2.4" = "#AC50B5"), guide=FALSE) +
+  theme_bw() + theme(panel.grid.minor = element_line(size = 0.5), panel.grid.major = element_line(size = 0.5)) +
+  scale_y_continuous(expand=c(0.01, 0.0),
+                     breaks = y_trans(c(0.0, 0.7, 0.8, 0.9, 1.0)),
+                     labels = c("0%", "70%", "80%", "90%", "100%"),
+                     minor_breaks = y_trans(seq(0.1, 0.6, 0.1))) +
+  scale_x_discrete(labels = gsub("_", " ", c("Canu\nv1.8", "Flye\nv2.4.2", "Ra\n07364a1", "Unicycler\nv0.4.7", "Wtdbg2\nv2.4"))) +
+  coord_cartesian(ylim=c(0, 0.6)) +
+  labs(title="Real read sets", y="Contiguity", x=NULL)
+```
+
+```{r real_contiguity_zoom}
+p4 <- ggplot(data=real_chromosome_results) +
+  geom_sina(aes(x=assembler, y=contiguity, colour=assembler, shape=platform_int), scale="area", maxwidth=0.85, bw=0.000005, size=1.75, alpha=0.75, stroke=0) +
+  scale_shape_identity("Platform", labels=c("PacBio RSII", "ONT MinION")) +
+  scale_colour_manual(values = c("canu_v1.8" = "#AB3B33", "flye_v2.4.2" = "#998B00", "flye_v2.4.2_plasmids" = "#998B00", "flye_v2.4.2_meta" = "#998B00", "flye_v2.4.2_plasmids_meta" = "#998B00", "ra_07364a1" = "#009E43", "unicycler_v0.4.7" = "#006DC4", "wtdbg2_v2.4" = "#AC50B5"), guide=FALSE) +
+  theme_bw() + theme(panel.grid.minor = element_line(size = 0.5), panel.grid.major = element_line(size = 0.5)) +
+  scale_y_continuous(labels = scales::percent_format(accuracy=0.001), limits = c(0.9999, 1.0001)) +
+  scale_x_discrete(labels = gsub("_", " ", c("Canu\nv1.8", "Flye\nv2.4.2", "Ra\n07364a1", "Unicycler\nv0.4.7", "Wtdbg2\nv2.4"))) +
+  coord_cartesian(ylim = c(0.99992, 1.00008)) +
+  labs(title=" ", y=NULL, x=NULL)
+```
+
+```{r contiguity, fig.width=8, fig.height=5.5}
+p1 <- ggplotGrob(p1)
+p2 <- ggplotGrob(p2)
+p3 <- ggplotGrob(p3)
+p4 <- ggplotGrob(p4)
+maxWidth = grid::unit.pmax(p1$widths[2:5], p2$widths[2:5], p3$widths[2:5], p4$widths[2:5])
+p1$widths[2:5] <- as.list(maxWidth)
+p2$widths[2:5] <- as.list(maxWidth)
+p3$widths[2:5] <- as.list(maxWidth)
+p4$widths[2:5] <- as.list(maxWidth)
+grid.arrange(p1, p2, p3, p4, ncol = 2)
+```
+
+
+
+
+
+
+
+
+## Identity plots
+
+```{r identity, fig.width=4, fig.height=3}
+real_chromosome_results$identity_trans <- id_y_trans(real_chromosome_results$identity)
+ggplot(data=real_chromosome_results) +
+  geom_sina(aes(x=assembler, y=identity_trans, colour=assembler, shape=platform_int), scale="area", maxwidth=0.85, bw=1, size=1.75, alpha=0.75, stroke=0) +
+  scale_shape_identity("Platform", labels=c("PacBio RSII", "ONT MinION")) +
+  scale_colour_manual(values = c("canu_v1.8" = "#AB3B33", "flye_v2.4.2" = "#998B00", "ra_07364a1" = "#009E43", "unicycler_v0.4.7" = "#006DC4", "wtdbg2_v2.4" = "#AC50B5"), guide=FALSE) +
+  coord_cartesian(ylim=c(10, 56)) +
+  scale_y_continuous(breaks = seq(10, 50, 10), minor_breaks = NULL) +
+  scale_x_discrete(labels = gsub("_", " ", c("Canu\nv1.8", "Flye\nv2.4.2", "Ra\n07364a1", "Unicycler\nv0.4.7", "Wtdbg2\nv2.4"))) +
+  theme_bw() +
+  labs(title="Mean sequence identity", x=NULL, y="Qscore")
+```
+
+
+
+
+
+
+
+
+## Time plots
+
+```{r assembly_time, fig.width=4, fig.height=3}
+ggplot(data=real_chromosome_results) +
+  geom_sina(aes(x=assembler, y=minutes, colour=assembler, shape=platform_int), scale="area", maxwidth=0.85, bw=0.12, size=1.75, alpha=0.75, stroke=0) +
+  scale_shape_identity("Platform", labels=c("PacBio RSII", "ONT MinION")) +
+  scale_colour_manual(values = c("canu_v1.8" = "#AB3B33", "flye_v2.4.2" = "#998B00", "flye_v2.4.2_plasmids" = "#998B00", "flye_v2.4.2_meta" = "#998B00", "flye_v2.4.2_plasmids_meta" = "#998B00", "ra_07364a1" = "#009E43", "unicycler_v0.4.7" = "#006DC4", "wtdbg2_v2.4" = "#AC50B5"), guide=FALSE) +
+  scale_y_log10(breaks = c(1, 3, 10, 30, 100, 300, 1000, 3000), minor_breaks = NULL, limits = c(2.9, 1430)) +
+  scale_x_discrete(labels = gsub("_", " ", c("Canu\nv1.8", "Flye\nv2.4.2", "Ra\n07364a1", "Unicycler\nv0.4.7", "Wtdbg2\nv2.4"))) +
+  theme_bw() +
+  labs(title="Assembly time", y="Time (minutes)", x=NULL)
+```
+
+Making a smaller version of the time plot for my poster showing only the ONT results:
+```{r assembly_time_smaller, fig.width=4, fig.height=3.5}
+nanopore_chromosome_results <- filter(real_chromosome_results, platform == "nanopore")
+ggplot(data=nanopore_chromosome_results) +
+  geom_sina(aes(x=assembler, y=minutes, colour=assembler), scale="area", maxwidth=0.85, bw=0.15, size=2.75, alpha=0.75, stroke=0) +
+  scale_colour_manual(values = c("canu_v1.8" = "#AB3B33", "flye_v2.4.2" = "#998B00", "flye_v2.4.2_plasmids" = "#998B00", "flye_v2.4.2_meta" = "#998B00", "flye_v2.4.2_plasmids_meta" = "#998B00", "ra_07364a1" = "#009E43", "unicycler_v0.4.7" = "#006DC4", "wtdbg2_v2.4" = "#AC50B5"), guide=FALSE) +
+  scale_y_log10(breaks = c(1, 3, 10, 30, 100, 300, 1000, 3000), minor_breaks = NULL, limits = c(2.9, 1430)) +
+  scale_x_discrete(labels = gsub("_", " ", c("Canu\nv1.8", "Flye\nv2.4.2", "Ra\n07364a1", "Unicycler\nv0.4.7", "Wtdbg2\nv2.4"))) +
+  theme_bw() +
+  labs(title="Assembly time", y="Time (minutes)", x=NULL)
+```
+
+
+
+
+
+
+
+
+## Plasmid plots
+
+Functions for making the plots:
+```{r}
+prep_results_one_assembler <- function(results, assembler_name) {
+  assembler_results <- results[results$assembler == assembler_name,]
+  return(assembler_results)
+}
+
+plot_plasmids_one_assembler <- function(results, assembler_name, colour) {
+  assembler_results <- prep_results_one_assembler(results, assembler_name)
+  assembler_results$length_k <- assembler_results$length / 1000
+  formatted_name <- gsub("_", " ", toTitleCase(assembler_name))
+  total_plasmids <- nrow(assembler_results)
+  assembled_plasmids <- nrow(assembler_results[assembler_results$contig_match,])
+  assembled_fraction <- paste(as.character(assembled_plasmids), as.character(total_plasmids), sep="/")
+  assembled_percent <-  paste(format(round(100.0 * assembled_plasmids / total_plasmids, 1), nsmall = 1), "%", sep="")
+  plot_title <- paste(formatted_name, assembled_percent, sep=": ")
+  p <- ggplot(data=assembler_results) +
+    geom_point(aes(x=length_k, y=depth, shape=shape), colour=colour, stroke = 0.1, size=1.75, alpha=0.75) +
+    scale_shape_manual("Contigs", values = c(1, 16, 2, 17), guide=FALSE) +
+    scale_y_log10(minor_breaks = NULL) +
+    scale_x_sqrt(expand = c(0, 0), limits = c(0, 250),
+                 breaks = c(0, 10, 40, 90, 160, 250), minor_breaks = NULL) +
+    theme_bw() +
+    labs(title = plot_title, x = "Length (kbp)", y = "Read depth")
+  return(p)
+}
+```
+
+
+```{r plasmids, fig.width=10, fig.height=9}
+p1 <- plot_plasmids_one_assembler(plasmid_results, "canu_v1.8", "#AB3B33")
+p2 <- plot_plasmids_one_assembler(plasmid_results, "ra_07364a1", "#009E43")
+p3 <- plot_plasmids_one_assembler(plasmid_results, "flye_v2.4.2", "#998B00")
+p4 <- plot_plasmids_one_assembler(plasmid_results, "flye_v2.4.2_plasmids", "#998B00")
+p5 <- plot_plasmids_one_assembler(plasmid_results, "unicycler_v0.4.7", "#006DC4")
+p6 <- plot_plasmids_one_assembler(plasmid_results, "flye_v2.4.2_meta", "#998B00")
+p7 <- plot_plasmids_one_assembler(plasmid_results, "flye_v2.4.2_plasmids_meta", "#998B00")
+p8 <- plot_plasmids_one_assembler(plasmid_results, "wtdbg2_v2.4", "#AC50B5")
+grid.arrange(p1, p2, p2, p3, p4, p5, p6, p7, p8, ncol = 3)
+```
+
+And a smaller version for the poster:
+```{r plasmids_smaller, fig.width=6, fig.height=6}
+p1 <- plot_plasmids_one_assembler(plasmid_results, "canu_v1.8", "#AB3B33")
+p2 <- plot_plasmids_one_assembler(plasmid_results, "ra_07364a1", "#009E43")
+p3 <- plot_plasmids_one_assembler(plasmid_results, "flye_v2.4.2", "#998B00")
+p4 <- plot_plasmids_one_assembler(plasmid_results, "flye_v2.4.2_plasmids", "#998B00")
+p5 <- plot_plasmids_one_assembler(plasmid_results, "unicycler_v0.4.7", "#006DC4")
+p6 <- plot_plasmids_one_assembler(plasmid_results, "flye_v2.4.2_meta", "#998B00")
+p7 <- plot_plasmids_one_assembler(plasmid_results, "flye_v2.4.2_plasmids_meta", "#998B00")
+p8 <- plot_plasmids_one_assembler(plasmid_results, "wtdbg2_v2.4", "#AC50B5")
+grid.arrange(p1, p2, p2, p3, p4, p5, p6, p7, p8, ncol = 3)
+```
+
+
+```{r}
+completed_chromosome_percentage <- function(results, assembler_name) {
+  chromosome_count <- nrow(filter(results, assembler == assembler_name))
+  completed_chromosome_count <- nrow(filter(results, assembler == assembler_name) %>% filter(contig_match == TRUE))
+  return(c(assembler_name, completed_chromosome_count, chromosome_count, 100.0 * completed_chromosome_count / chromosome_count))
+}
+
+completed_chromosome_percentage(sim_plasmid_results_chromosome, "canu_v1.8")
+completed_chromosome_percentage(sim_plasmid_results_chromosome, "flye_v2.4.2")
+completed_chromosome_percentage(sim_plasmid_results_chromosome, "flye_v2.4.2_plasmids")
+completed_chromosome_percentage(sim_plasmid_results_chromosome, "flye_v2.4.2_meta")
+completed_chromosome_percentage(sim_plasmid_results_chromosome, "flye_v2.4.2_plasmids_meta")
+completed_chromosome_percentage(sim_plasmid_results_chromosome, "ra_07364a1")
+completed_chromosome_percentage(sim_plasmid_results_chromosome, "unicycler_v0.4.7")
+completed_chromosome_percentage(sim_plasmid_results_chromosome, "wtdbg2_v2.4")
+
+completed_chromosome_percentage(real_plasmid_results_chromosome, "canu_v1.8")
+completed_chromosome_percentage(real_plasmid_results_chromosome, "flye_v2.4.2")
+completed_chromosome_percentage(real_plasmid_results_chromosome, "flye_v2.4.2_plasmids")
+completed_chromosome_percentage(real_plasmid_results_chromosome, "flye_v2.4.2_meta")
+completed_chromosome_percentage(real_plasmid_results_chromosome, "flye_v2.4.2_plasmids_meta")
+completed_chromosome_percentage(real_plasmid_results_chromosome, "ra_07364a1")
+completed_chromosome_percentage(real_plasmid_results_chromosome, "unicycler_v0.4.7")
+completed_chromosome_percentage(real_plasmid_results_chromosome, "wtdbg2_v2.4")
+```
+
