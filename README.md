@@ -5,6 +5,9 @@ __Ryan R. Wick<sup>1</sup> and Kathryn E. Holt<sup>1,2</sup>__
 <br>
 <sub>1. Department of Infectious Diseases, Central Clinical School, Monash University, Melbourne, Victoria 3004, Australia<br>2. London School of Hygiene & Tropical Medicine, London WC1E 7HT, UK</sub>
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2702443.svg)](https://doi.org/10.5281/zenodo.2702443)
+
+
 
 
 This repo contains early results for our benchmarking of long-read assemblers for bacterial genomes. It is still a work in progress, and we'll be putting together a manuscript in the future. But until then, we decided to show our results here on GitHub for the eager and/or curious!
