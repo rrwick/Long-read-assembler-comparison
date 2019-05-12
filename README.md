@@ -401,9 +401,11 @@ This plot shows the consensus sequence identity for the real read sets:
 
 <p align="center"><img src="images/identity.png" alt="Sequence identity results" width="55%"></p>
 
-For each assembler, the top part of the distribution is for PacBio read sets and the bottom for ONT read sets. This demonstrates a common issue with ONT reads: systematic read errors which make their way into the consensus sequence.
+For each assembler, the top part of the distribution is for PacBio read sets and the bottom for ONT read sets. This demonstrates a common issue with ONT reads: systematic read errors which make their way into the consensus sequence. I should also point out that neither the PacBio or ONT reads we used are state-of-the-art, so don't take take the particular accuracy values too seriously – modern data may well have fewer errors. 
 
 Ra and Unicycler (both of which use [Racon](https://github.com/isovic/racon) to polish) do well on ONT reads but are underwhelming for PacBio reads. Conversely, Flye does best for PacBio reads and worst for ONT reads. I found this lack of correlation between PacBio and ONT accuracy to be surprising.
+
+While this is interesting, as I stated in the introduction, I don't think consensus sequence identity is the most important metric in this comparison. If you're using a platform-specific polishing tool on your assembly (and you probably should be), then the assembly's structural correctness (measured by our contiguity metric) is much more important than its sequence identity.
 
 
 
