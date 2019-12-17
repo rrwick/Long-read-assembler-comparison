@@ -12,5 +12,5 @@ Are you interested in the older version of this comparison which was hosted here
 
 ## License
 
-[GNU General Public License, version 3](https://www.gnu.org/licenses/gpl-3.0.html)
+[Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/legalcode)
 

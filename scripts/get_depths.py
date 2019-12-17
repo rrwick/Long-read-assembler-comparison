@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
-This script takes a minimap2 PAF as input and outputs the mean depth
-for each reference contig.
+This script takes a minimap2 PAF as input and outputs the mean depth for each reference contig.
+
+This script is licensed under a Creative Commons Attribution 4.0 International License. You should
+have received a copy of the license along with this work. If not, see
+<http://creativecommons.org/licenses/by/4.0/>.
 """
 
 import collections

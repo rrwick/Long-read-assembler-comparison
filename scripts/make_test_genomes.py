@@ -6,6 +6,10 @@ For each output genome it:
   * sets the chromosome to 1x depth
   * sets any plasmids to a random depth (the min/max of the range depending on the plasmid size)
   * sets all output replicons to circular
+
+This script is licensed under a Creative Commons Attribution 4.0 International License. You should
+have received a copy of the license along with this work. If not, see
+<http://creativecommons.org/licenses/by/4.0/>.
 """
 
 import glob

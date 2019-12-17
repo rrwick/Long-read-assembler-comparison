@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
-This script replaces all ambiguous bases in the assembly with A.
+This script replaces all ambiguous bases in the assembly with A. It assumes the input FASTA file
+has a one-line-per-sequence format.
 
-It assumes the input FASTA file has a one-line-per-sequence format.
+This script is licensed under a Creative Commons Attribution 4.0 International License. You should
+have received a copy of the license along with this work. If not, see
+<http://creativecommons.org/licenses/by/4.0/>.
 """
 
 import glob
