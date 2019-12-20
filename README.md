@@ -72,7 +72,7 @@ __Figure S7.__ Contiguity of the simulated read set assemblies plotted against B
 
 <p align="center"><img src="supplementary_figures/Fig_S08_simulated_plasmids.png" alt="Minipolish" width="75%"></p>
 
-__Figure S8.__ Plasmid completion for the real read set assemblies for each of the tested assemblers, plotted with plasmid length and read depth. Solid dots indicate completely assembled plasmids (contiguity ≥99%) while open dots indicate incomplete plasmids (contiguity <99%). Percentages in the plot titles give the proportion of plasmids which were completely assembled.
+__Figure S8.__ Plasmid completion for the simulated read set assemblies for each of the tested assemblers, plotted with plasmid length and read depth. Solid dots indicate completely assembled plasmids (contiguity ≥99%) while open dots indicate incomplete plasmids (contiguity <99%). Percentages in the plot titles give the proportion of plasmids which were completely assembled.
 
 <br><br><br><br>
 
@@ -80,7 +80,7 @@ __Figure S8.__ Plasmid completion for the real read set assemblies for each of t
 
 <p align="center"><img src="supplementary_figures/Fig_S09_real_plasmids.png" alt="Minipolish" width="75%"></p>
 
-__Figure S9.__ Plasmid completion for the simulated read set assemblies for each of the tested assemblers, plotted with plasmid length and read depth. Solid dots indicate completely assembled plasmids (contiguity ≥99%) while open dots indicate incomplete plasmids (contiguity <99%). Percentages in the plot titles give the proportion of plasmids which were completely assembled.
+__Figure S9.__ Plasmid completion for the real read set assemblies for each of the tested assemblers, plotted with plasmid length and read depth. Solid dots indicate completely assembled plasmids (contiguity ≥99%) while open dots indicate incomplete plasmids (contiguity <99%). Percentages in the plot titles give the proportion of plasmids which were completely assembled.
 
 <br><br><br><br> 
 
