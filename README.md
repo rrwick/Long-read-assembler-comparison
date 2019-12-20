@@ -32,7 +32,7 @@ __Figure S2.__ Badread parameter histograms for the simulated read sets. (A) Mea
 
 <p align="center"><img src="supplementary_figures/Fig_S03_replicon_depths.png" alt="Minipolish" width="60%"></p>
 
-__Figure S3.__ Top: the target simulated depth of each replicon relative to the chromosome. The smaller the plasmid, the wider the range of possible depths. Bottom: the absolute read set of each replicon after read simulation.
+__Figure S3.__ Top: the target simulated depth of each replicon relative to the chromosome. The smaller the plasmid, the wider the range of possible depths. Bottom: the absolute read depth of each replicon after read simulation.
 
 <br><br><br><br>
 
