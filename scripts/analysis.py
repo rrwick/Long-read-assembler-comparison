@@ -4,10 +4,6 @@ This script takes the following arguments (in this order):
   * assembly filename
   * reference genome fasta
   * mode: 'genome' or 'replicon'
-
-This script is licensed under a Creative Commons Attribution 4.0 International License. You should
-have received a copy of the license along with this work. If not, see
-<http://creativecommons.org/licenses/by/4.0/>.
 """
 
 import collections
@@ -42,19 +38,22 @@ def main():
 
     with tempfile.TemporaryDirectory() as temp_dir:
         tripled_ref_filename = triple_reference(ref_seqs, temp_dir)
-        contig_to_ref_alignments = get_contig_to_ref_alignments(assembly_filename, tripled_ref_filename)
+        contig_to_ref_alignments = get_contig_to_ref_alignments(assembly_filename,
+                                                                tripled_ref_filename)
 
     completed_chromosome, completed_all = True, True
     replicon_lines = []
     for replicon_name in replicon_names:
         replicon_length = [len(x[1]) for x in ref_seqs if x[0] == replicon_name][0]
-        contig_name, contiguity, identity = get_contiguity(replicon_name, replicon_length, contig_to_ref_alignments)
+        contig_name, contiguity, identity, max_indel = \
+            get_contiguity(replicon_name, replicon_length, contig_to_ref_alignments)
         if contiguity < CONTIGUITY_COMPLETENESS_THRESHOLD:
             completed_all = False
             if replicon_length > 400000:
                 completed_chromosome = False
         replicon_lines.append('\t'.join([genome_name, f'{replicon_name}', f'{replicon_length}',
-                                         assembler, f'{contig_name}', f'{contiguity}', f'{identity}']))
+                                         assembler, f'{contig_name}', f'{contiguity}',
+                                         f'{identity}', f'{max_indel}']))
 
     if mode == 'replicon':
         replicon_lines = sorted(replicon_lines, key=lambda x: int(x.split('\t')[2]), reverse=True)
@@ -154,7 +153,7 @@ def get_contig_to_ref_alignments(assembly_filename, tripled_ref_filename):
 def get_contiguity(ref_seq_name, replicon_length, contig_to_ref_alignments):
     alignments = [a for a in contig_to_ref_alignments if a.ref_name == ref_seq_name]
     if not alignments:
-        return '', 0.0, 0.0
+        return '', 0.0, 0.0, ''
     best_alignment = sorted(alignments, key=lambda a: (a.ref_align_length, 1.0 / (a.ref_start+1)))[-1]
     contig_name = best_alignment.query_name
     contiguity = best_alignment.ref_align_length / replicon_length
@@ -162,10 +161,12 @@ def get_contiguity(ref_seq_name, replicon_length, contig_to_ref_alignments):
     # To provide an identity value, the alignment must cover either 100 kbp or 1/4 of the replicon.
     if best_alignment.ref_align_length > 100000 or best_alignment.ref_align_length > replicon_length / 4:
         identity = best_alignment.identity
+        max_indel = best_alignment.get_max_indel()
     else:
         identity = 0.0
+        max_indel = ''
 
-    return contig_name, contiguity, identity
+    return contig_name, contiguity, identity, max_indel
 
 
 class Alignment(object):
@@ -191,8 +192,25 @@ class Alignment(object):
         self.ref_align_length = self.ref_end - self.ref_start
         self.query_align_length = self.query_end - self.query_start
 
+        self.cigar = None
+        for part in line_parts:
+            if part.startswith('cg:Z:'):
+                self.cigar = part[5:]
+        if self.cigar is None:
+            sys.exit('Error: no CIGAR string found')
+
     def __repr__(self):
         return f'{self.query_name}: {self.query_start}-{self.query_end}; {self.ref_name}: {self.ref_start}-{self.ref_end}'
+
+    def get_max_indel(self):
+        max_indel = 0
+        cigar_parts = re.findall(r'\d+\w', self.cigar)
+        for cigar_part in cigar_parts:
+            num = int(cigar_part[:-1])
+            letter = cigar_part[-1]
+            if (letter == 'I' or letter == 'D') and num > max_indel:
+                max_indel = num
+        return max_indel
 
 
 if __name__ == '__main__':
