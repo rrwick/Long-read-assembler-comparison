@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 """
-This script takes the following arguments (in this order):
-  * assembly filename
-  * reference genome fasta
-  * mode: 'genome' or 'replicon'
+This script compares an assembly to a reference genome.
 """
 
 import argparse
