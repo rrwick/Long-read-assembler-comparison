@@ -1,6 +1,22 @@
 #!/usr/bin/env python3
 """
-This script compares an assembly to a reference genome.
+This script compares a bacterial whole genome assembly to a reference sequence. It assumes that
+all replicons are circular, the reference sequence is complete (i.e. one contig per replicon) and
+that the reference sequences are cleanly circularised (i.e. no missing or extra bases at the
+start/end of the sequence).
+
+It can be run in three ways:
+1) assess_assembly.py --mode genome assembly.fasta reference.fasta
+   When run in 'genome' mode, the output will contain a single line of results that indicates
+   whether the chromosome was completely assembled and whether all replicons were completely
+   assembled.
+2) assess_assembly.py --mode replicon assembly.fasta reference.fasta
+   When run in 'replicon' mode, the output will contain a line of results for each replicon in the
+   reference genome which indicates the contiguity, identity and maximum indel size for the
+   replicon.
+3) assess_assembly.py --mode alignment assembly.fasta reference.fasta
+   When run in 'alignment' mode, the output will show the entire longest alignment between the
+   assembly and each reference sequence.
 """
 
 import argparse
