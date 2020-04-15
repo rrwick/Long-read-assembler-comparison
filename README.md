@@ -61,7 +61,7 @@ __Figure S3.__ Top: the target simulated depth of each replicon relative to the 
 
 <p align="center"><img src="figures/Fig_S04_commands.png" alt="Figure S4" width="80%"></p>
 
-__Figure S4.__ Commands used for each of the six assemblers tested.
+__Figure S4.__ Commands used for each of the seven assemblers tested.
 
 <br><br><br><br>
 
