@@ -179,7 +179,7 @@ def get_contig_to_ref_alignments(assembly_filename, ref_seqs, threads):
     with tempfile.TemporaryDirectory() as temp_dir:
         tripled_ref_filename = triple_reference(ref_seqs, temp_dir)
         p = subprocess.run(['minimap2', '-c', '-t', str(threads), '-x', 'asm20',
-                            '-r', '10000', '-g', '10000',
+                            '-r', '10000', '-g', '10000', '-z', '1000,500',
                             tripled_ref_filename, assembly_filename],
                            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         minimap2_output = p.stdout.decode()
