@@ -39,8 +39,8 @@ library(cowplot)
 ## Load data from the Excel spreadsheet
 
 ```{r}
-genome_data <- read_excel("Long-read_assembler_comparison.xlsx", sheet = "Per-genome", col_names = TRUE) %>% filter(!is.na(`Canu v2.0 assembly size`))
-replicon_data <- read_excel("Long-read_assembler_comparison.xlsx", sheet = "Per-replicon", col_names = TRUE) %>% filter(!is.na(`Canu v2.0 contiguity`))
+genome_data <- read_excel("Long-read_assembler_comparison.xlsx", sheet = "Per-genome", col_names = TRUE) %>% filter(!is.na(`Canu v2.1 assembly size`))
+replicon_data <- read_excel("Long-read_assembler_comparison.xlsx", sheet = "Per-replicon", col_names = TRUE) %>% filter(!is.na(`Canu v2.1 contiguity`))
 ```
 
 
@@ -558,7 +558,7 @@ combined_plot(simulated_genome_data, simulated_replicon_data,
 
 ## Problem plots
 
-```{r problems, fig.width = 4, fig.height = 10}
+```{r problems, fig.width = 4, fig.height = 11}
 
 # Make a y-axis transformation which focuses on the range up to 100%.
 # https://www.desmos.com/calculator/zophcuf53z
@@ -621,14 +621,14 @@ depth_plot <- function(chromosome_data, assembler_name, colour, title, point_siz
   return(p)
 }
 
-p1 <- depth_plot(chromosome_data, "Canu v2.0", colour = "#f8766d", title = "A. Read depth", point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p1 <- depth_plot(chromosome_data, "Canu v2.1", colour = "#f8766d", title = "A. Read depth", point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p2 <- depth_plot(chromosome_data, "Flye v2.8", colour = "#cd9600", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p3 <- depth_plot(chromosome_data, "Miniasm+ v0.3", colour = "#7cae00", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p4 <- depth_plot(chromosome_data, "NECAT v20200119", colour = "#00be67", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p5 <- depth_plot(chromosome_data, "NextDenovo v2.3.0", colour = "#00bfc4", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p6 <- depth_plot(chromosome_data, "Raven v1.1.10", colour = "#00a9ff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p4 <- depth_plot(chromosome_data, "NECAT v20200803", colour = "#00be67", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p5 <- depth_plot(chromosome_data, "NextDenovo v2.3.1", colour = "#00bfc4", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p6 <- depth_plot(chromosome_data, "Raven v1.3.0", colour = "#00a9ff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p7 <- depth_plot(chromosome_data, "Redbean v2.5", colour = "#c77cff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p8 <- depth_plot(chromosome_data, "Shasta v0.5.1", colour = "#ff61cc", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = TRUE)
+p8 <- depth_plot(chromosome_data, "Shasta v0.7.0", colour = "#ff61cc", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = TRUE)
 plot_grid(p1, p2, p3, p4, p5, p6, p7, p8, ncol=1, align="hv")
 
 
@@ -651,14 +651,14 @@ identity_plot <- function(chromosome_data, assembler_name, colour, title, point_
   return(p)
 }
 
-p1 <- identity_plot(chromosome_data, "Canu v2.0", colour = "#f8766d", title = "B. Max read identity", point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p1 <- identity_plot(chromosome_data, "Canu v2.1", colour = "#f8766d", title = "B. Max read identity", point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p2 <- identity_plot(chromosome_data, "Flye v2.8", colour = "#cd9600", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p3 <- identity_plot(chromosome_data, "Miniasm+ v0.3", colour = "#7cae00", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p4 <- identity_plot(chromosome_data, "NECAT v20200119", colour = "#00be67", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p5 <- identity_plot(chromosome_data, "NextDenovo v2.3.0", colour = "#00bfc4", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p6 <- identity_plot(chromosome_data, "Raven v1.1.10", colour = "#00a9ff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p4 <- identity_plot(chromosome_data, "NECAT v20200803", colour = "#00be67", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p5 <- identity_plot(chromosome_data, "NextDenovo v2.3.1", colour = "#00bfc4", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p6 <- identity_plot(chromosome_data, "Raven v1.3.0", colour = "#00a9ff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p7 <- identity_plot(chromosome_data, "Redbean v2.5", colour = "#c77cff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p8 <- identity_plot(chromosome_data, "Shasta v0.5.1", colour = "#ff61cc", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = TRUE)
+p8 <- identity_plot(chromosome_data, "Shasta v0.7.0", colour = "#ff61cc", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = TRUE)
 plot_grid(p1, p2, p3, p4, p5, p6, p7, p8, ncol=1, align="hv")
 
 
@@ -681,14 +681,14 @@ n50_plot <- function(chromosome_data, assembler_name, colour, title, point_size,
   return(p)
 }
 
-p1 <- n50_plot(chromosome_data, "Canu v2.0", colour = "#f8766d", title = "C. Read N50 length", point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p1 <- n50_plot(chromosome_data, "Canu v2.1", colour = "#f8766d", title = "C. Read N50 length", point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p2 <- n50_plot(chromosome_data, "Flye v2.8", colour = "#cd9600", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p3 <- n50_plot(chromosome_data, "Miniasm+ v0.3", colour = "#7cae00", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p4 <- n50_plot(chromosome_data, "NECAT v20200119", colour = "#00be67", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p5 <- n50_plot(chromosome_data, "NextDenovo v2.3.0", colour = "#00bfc4", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p6 <- n50_plot(chromosome_data, "Raven v1.1.10", colour = "#00a9ff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p4 <- n50_plot(chromosome_data, "NECAT v20200803", colour = "#00be67", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p5 <- n50_plot(chromosome_data, "NextDenovo v2.3.1", colour = "#00bfc4", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p6 <- n50_plot(chromosome_data, "Raven v1.3.0", colour = "#00a9ff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p7 <- n50_plot(chromosome_data, "Redbean v2.5", colour = "#c77cff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p8 <- n50_plot(chromosome_data, "Shasta v0.5.1", colour = "#ff61cc", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = TRUE)
+p8 <- n50_plot(chromosome_data, "Shasta v0.7.0", colour = "#ff61cc", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = TRUE)
 plot_grid(p1, p2, p3, p4, p5, p6, p7, p8, ncol=1, align="hv")
 
 
@@ -712,14 +712,14 @@ random_junk_plot <- function(chromosome_data, assembler_name, colour, title, poi
   return(p)
 }
 
-p1 <- random_junk_plot(chromosome_data, "Canu v2.0", colour = "#f8766d", title = "D. Random+junk rates", point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p1 <- random_junk_plot(chromosome_data, "Canu v2.1", colour = "#f8766d", title = "D. Random+junk rates", point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p2 <- random_junk_plot(chromosome_data, "Flye v2.8", colour = "#cd9600", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p3 <- random_junk_plot(chromosome_data, "Miniasm+ v0.3", colour = "#7cae00", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p4 <- random_junk_plot(chromosome_data, "NECAT v20200119", colour = "#00be67", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p5 <- random_junk_plot(chromosome_data, "NextDenovo v2.3.0", colour = "#00bfc4", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p6 <- random_junk_plot(chromosome_data, "Raven v1.1.10", colour = "#00a9ff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p4 <- random_junk_plot(chromosome_data, "NECAT v20200803", colour = "#00be67", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p5 <- random_junk_plot(chromosome_data, "NextDenovo v2.3.1", colour = "#00bfc4", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p6 <- random_junk_plot(chromosome_data, "Raven v1.3.0", colour = "#00a9ff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p7 <- random_junk_plot(chromosome_data, "Redbean v2.5", colour = "#c77cff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p8 <- random_junk_plot(chromosome_data, "Shasta v0.5.1", colour = "#ff61cc", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = TRUE)
+p8 <- random_junk_plot(chromosome_data, "Shasta v0.7.0", colour = "#ff61cc", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = TRUE)
 plot_grid(p1, p2, p3, p4, p5, p6, p7, p8, ncol=1, align="hv")
 
 
@@ -741,14 +741,14 @@ chimera_plot <- function(chromosome_data, assembler_name, colour, title, point_s
   return(p)
 }
 
-p1 <- chimera_plot(chromosome_data, "Canu v2.0", colour = "#f8766d", title = "E. Chimera rates", point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p1 <- chimera_plot(chromosome_data, "Canu v2.1", colour = "#f8766d", title = "E. Chimera rates", point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p2 <- chimera_plot(chromosome_data, "Flye v2.8", colour = "#cd9600", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p3 <- chimera_plot(chromosome_data, "Miniasm+ v0.3", colour = "#7cae00", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p4 <- chimera_plot(chromosome_data, "NECAT v20200119", colour = "#00be67", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p5 <- chimera_plot(chromosome_data, "NextDenovo v2.3.0", colour = "#00bfc4", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p6 <- chimera_plot(chromosome_data, "Raven v1.1.10", colour = "#00a9ff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p4 <- chimera_plot(chromosome_data, "NECAT v20200803", colour = "#00be67", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p5 <- chimera_plot(chromosome_data, "NextDenovo v2.3.1", colour = "#00bfc4", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p6 <- chimera_plot(chromosome_data, "Raven v1.3.0", colour = "#00a9ff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p7 <- chimera_plot(chromosome_data, "Redbean v2.5", colour = "#c77cff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p8 <- chimera_plot(chromosome_data, "Shasta v0.5.1", colour = "#ff61cc", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = TRUE)
+p8 <- chimera_plot(chromosome_data, "Shasta v0.7.0", colour = "#ff61cc", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = TRUE)
 plot_grid(p1, p2, p3, p4, p5, p6, p7, p8, ncol=1, align="hv")
 
 
@@ -770,14 +770,14 @@ adapter_plot <- function(chromosome_data, assembler_name, colour, title, point_s
   return(p)
 }
 
-p1 <- adapter_plot(chromosome_data, "Canu v2.0", colour = "#f8766d", title = "F. Adapter length", point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p1 <- adapter_plot(chromosome_data, "Canu v2.1", colour = "#f8766d", title = "F. Adapter length", point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p2 <- adapter_plot(chromosome_data, "Flye v2.8", colour = "#cd9600", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p3 <- adapter_plot(chromosome_data, "Miniasm+ v0.3", colour = "#7cae00", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p4 <- adapter_plot(chromosome_data, "NECAT v20200119", colour = "#00be67", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p5 <- adapter_plot(chromosome_data, "NextDenovo v2.3.0", colour = "#00bfc4", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p6 <- adapter_plot(chromosome_data, "Raven v1.1.10", colour = "#00a9ff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p4 <- adapter_plot(chromosome_data, "NECAT v20200803", colour = "#00be67", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p5 <- adapter_plot(chromosome_data, "NextDenovo v2.3.1", colour = "#00bfc4", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p6 <- adapter_plot(chromosome_data, "Raven v1.3.0", colour = "#00a9ff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p7 <- adapter_plot(chromosome_data, "Redbean v2.5", colour = "#c77cff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p8 <- adapter_plot(chromosome_data, "Shasta v0.5.1", colour = "#ff61cc", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = TRUE)
+p8 <- adapter_plot(chromosome_data, "Shasta v0.7.0", colour = "#ff61cc", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = TRUE)
 plot_grid(p1, p2, p3, p4, p5, p6, p7, p8, ncol=1, align="hv")
 
 
@@ -812,14 +812,14 @@ glitch_plot <- function(chromosome_data, assembler_name, colour, title, point_si
   return(p)
 }
 
-p1 <- glitch_plot(chromosome_data, "Canu v2.0", colour = "#f8766d", title = "G. Glitch size/skip", point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p1 <- glitch_plot(chromosome_data, "Canu v2.1", colour = "#f8766d", title = "G. Glitch size/skip", point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p2 <- glitch_plot(chromosome_data, "Flye v2.8", colour = "#cd9600", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p3 <- glitch_plot(chromosome_data, "Miniasm+ v0.3", colour = "#7cae00", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p4 <- glitch_plot(chromosome_data, "NECAT v20200119", colour = "#00be67", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p5 <- glitch_plot(chromosome_data, "NextDenovo v2.3.0", colour = "#00bfc4", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p6 <- glitch_plot(chromosome_data, "Raven v1.1.10", colour = "#00a9ff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p4 <- glitch_plot(chromosome_data, "NECAT v20200803", colour = "#00be67", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p5 <- glitch_plot(chromosome_data, "NextDenovo v2.3.1", colour = "#00bfc4", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p6 <- glitch_plot(chromosome_data, "Raven v1.3.0", colour = "#00a9ff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p7 <- glitch_plot(chromosome_data, "Redbean v2.5", colour = "#c77cff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p8 <- glitch_plot(chromosome_data, "Shasta v0.5.1", colour = "#ff61cc", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = TRUE)
+p8 <- glitch_plot(chromosome_data, "Shasta v0.7.0", colour = "#ff61cc", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = TRUE)
 plot_grid(p1, p2, p3, p4, p5, p6, p7, p8, ncol=1, align="hv")
 
 
@@ -842,14 +842,14 @@ gc_plot <- function(chromosome_data, assembler_name, colour, title, point_size, 
   return(p)
 }
 
-p1 <- gc_plot(chromosome_data, "Canu v2.0", colour = "#f8766d", title = "GC content", point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p1 <- gc_plot(chromosome_data, "Canu v2.1", colour = "#f8766d", title = "GC content", point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p2 <- gc_plot(chromosome_data, "Flye v2.8", colour = "#cd9600", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p3 <- gc_plot(chromosome_data, "Miniasm+ v0.3", colour = "#7cae00", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p4 <- gc_plot(chromosome_data, "NECAT v20200119", colour = "#00be67", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p5 <- gc_plot(chromosome_data, "NextDenovo v2.3.0", colour = "#00bfc4", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p6 <- gc_plot(chromosome_data, "Raven v1.1.10", colour = "#00a9ff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p4 <- gc_plot(chromosome_data, "NECAT v20200803", colour = "#00be67", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p5 <- gc_plot(chromosome_data, "NextDenovo v2.3.1", colour = "#00bfc4", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
+p6 <- gc_plot(chromosome_data, "Raven v1.3.0", colour = "#00a9ff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
 p7 <- gc_plot(chromosome_data, "Redbean v2.5", colour = "#c77cff", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = FALSE)
-p8 <- gc_plot(chromosome_data, "Shasta v0.5.1", colour = "#ff61cc", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = TRUE)
+p8 <- gc_plot(chromosome_data, "Shasta v0.7.0", colour = "#ff61cc", title = NULL, point_size = 1.0, point_alpha = 0.6, x_axis = TRUE)
 plot_grid(p1, p2, p3, p4, p5, p6, p7, p8, ncol=1, align="hv")
 ```
 
@@ -900,14 +900,14 @@ sim_plasmid_data <- gather(data = sim_plasmid_data, key = Assembler, value = Con
 sim_plasmid_data$Assembler <- str_replace(sim_plasmid_data$Assembler, " contiguity", "")
 sim_plasmid_data$Complete <- sim_plasmid_data$Contiguity > 0.99
 
-p1 <- plot_plasmids_one_assembler(sim_plasmid_data, "Canu v2.0", colour = "#f8766d")
+p1 <- plot_plasmids_one_assembler(sim_plasmid_data, "Canu v2.1", colour = "#f8766d")
 p2 <- plot_plasmids_one_assembler(sim_plasmid_data, "Flye v2.8", colour = "#cd9600")
 p3 <- plot_plasmids_one_assembler(sim_plasmid_data, "Miniasm+ v0.3", colour = "#7cae00")
-p4 <- plot_plasmids_one_assembler(sim_plasmid_data, "NECAT v20200119", colour = "#00be67")
-p5 <- plot_plasmids_one_assembler(sim_plasmid_data, "NextDenovo v2.3.0", colour = "#00bfc4")
-p6 <- plot_plasmids_one_assembler(sim_plasmid_data, "Raven v1.1.10", colour = "#00a9ff")
+p4 <- plot_plasmids_one_assembler(sim_plasmid_data, "NECAT v20200803", colour = "#00be67")
+p5 <- plot_plasmids_one_assembler(sim_plasmid_data, "NextDenovo v2.3.1", colour = "#00bfc4")
+p6 <- plot_plasmids_one_assembler(sim_plasmid_data, "Raven v1.3.0", colour = "#00a9ff")
 p7 <- plot_plasmids_one_assembler(sim_plasmid_data, "Redbean v2.5", colour = "#c77cff")
-p8 <- plot_plasmids_one_assembler(sim_plasmid_data, "Shasta v0.5.1", colour = "#ff61cc")
+p8 <- plot_plasmids_one_assembler(sim_plasmid_data, "Shasta v0.7.0", colour = "#ff61cc")
 
 plot_grid(p1, p2, p3, p4, p5, p6, p7, p8, ncol=4, align="hv")
 
@@ -919,14 +919,14 @@ real_plasmid_data <- gather(data = real_plasmid_data, key = Assembler, value = C
 real_plasmid_data$Assembler <- str_replace(real_plasmid_data$Assembler, " contiguity", "")
 real_plasmid_data$Complete <- real_plasmid_data$Contiguity > 0.99
 
-p1 <- plot_plasmids_one_assembler(real_plasmid_data, "Canu v2.0", colour = "#f8766d")
+p1 <- plot_plasmids_one_assembler(real_plasmid_data, "Canu v2.1", colour = "#f8766d")
 p2 <- plot_plasmids_one_assembler(real_plasmid_data, "Flye v2.8", colour = "#cd9600")
 p3 <- plot_plasmids_one_assembler(real_plasmid_data, "Miniasm+ v0.3", colour = "#7cae00")
-p4 <- plot_plasmids_one_assembler(real_plasmid_data, "NECAT v20200119", colour = "#00be67")
-p5 <- plot_plasmids_one_assembler(real_plasmid_data, "NextDenovo v2.3.0", colour = "#00bfc4")
-p6 <- plot_plasmids_one_assembler(real_plasmid_data, "Raven v1.1.10", colour = "#00a9ff")
+p4 <- plot_plasmids_one_assembler(real_plasmid_data, "NECAT v20200803", colour = "#00be67")
+p5 <- plot_plasmids_one_assembler(real_plasmid_data, "NextDenovo v2.3.1", colour = "#00bfc4")
+p6 <- plot_plasmids_one_assembler(real_plasmid_data, "Raven v1.3.0", colour = "#00a9ff")
 p7 <- plot_plasmids_one_assembler(real_plasmid_data, "Redbean v2.5", colour = "#c77cff")
-p8 <- plot_plasmids_one_assembler(real_plasmid_data, "Shasta v0.5.1", colour = "#ff61cc")
+p8 <- plot_plasmids_one_assembler(real_plasmid_data, "Shasta v0.7.0", colour = "#ff61cc")
 
 plot_grid(p1, p2, p3, p4, p5, p6, p7, p8, ncol=4, align="hv")
 ```
@@ -995,7 +995,7 @@ This section is to investigate the fact that Canu was the assembler most prone t
 
 ```{r}
 canu_data <- genome_data
-canu_data$time <- canu_data$`Canu v2.0 time`
+canu_data$time <- canu_data$`Canu v2.1 time`
 canu_data <- canu_data %>% drop_na(time)
 canu_data$Seconds <- as.numeric(canu_data$time) - as.numeric(ISOdatetime(1899, 12, 31, 0, 0, 0, tz = "UTC"))
 canu_data$Minutes <- canu_data$Seconds / 60
